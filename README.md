@@ -85,12 +85,12 @@ Suggested link subnets (all under `172.16.0.0/16`):
 ## Prerequisites
 
 - Linux host (or WSL2 / Linux VM) with Docker + containerlab installed
-- The two router images imported locally — adjust the tags in `isis-lab.clab.yml`
-  to match exactly what `docker images` shows:
-  - `vrnetlab/cisco_c8000v:<tag>`
-  - `ios-xr/xrd-control-plane:<tag>`
+- The two router images imported locally. On the lab server (`10.0.0.172`) these are:
+  - `vrnetlab/cisco_c8000v:17.15.05` (also `17.12.05a` available)
+  - `ios-xr/xrd-control-plane:26.1.1`
 - **Resources**: c8000v ≈ 4 GB RAM each, XRd ≈ 2 GB each → budget **~24 GB RAM**
-  and 8+ vCPUs for the full lab. Comment out nodes/links if your host is smaller.
+  and 8+ vCPUs for the full lab. The lab server has 28 cores / 125 GB RAM, so the
+  full topology runs comfortably there.
 
 ## Deploy
 
