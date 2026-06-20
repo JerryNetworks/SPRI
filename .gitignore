@@ -1,0 +1,18 @@
+# containerlab runtime artifacts
+clab-*/
+.clab-*/
+*.clab.yml.bak
+
+# generated lab state / logs
+*.log
+*.tar
+*.tar.gz
+ansible-inventory.yml
+topology-data.json
+authorized_keys
+
+# editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

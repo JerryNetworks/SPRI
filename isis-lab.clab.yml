@@ -1,0 +1,69 @@
+# =============================================================================
+# IS-IS study lab  -  8 routers, mixed Cisco c8000v (IOS-XE) + XRd (IOS-XR)
+# Single Level-2 area.  Mix of point-to-point and broadcast (LAN) links.
+# =============================================================================
+#
+# Interface mapping (link "ethN" -> device interface):
+#   c8000v (cisco_c8000v):  eth1=Gi2, eth2=Gi3, eth3=Gi4 ...  (Gi1 = mgmt)
+#   XRd    (cisco_xrd):     eth1=Gi0/0/0/0, eth2=Gi0/0/0/1, eth3=Gi0/0/0/2 ...
+#
+# Credentials:  c8000v -> admin/admin     XRd -> clab/clab@123
+#
+# BEFORE you deploy, create the two host bridges used for the broadcast LANs:
+#   sudo ip link add br-lan1 type bridge && sudo ip link set br-lan1 up
+#   sudo ip link add br-lan2 type bridge && sudo ip link set br-lan2 up
+# (see README.md for full instructions and resource requirements)
+# =============================================================================
+
+name: isis-lab
+
+mgmt:
+  network: isis-lab-mgmt
+  ipv4-subnet: 172.20.20.0/24
+
+topology:
+  kinds:
+    cisco_c8000v:
+      # adjust the tag to match the image you imported
+      image: vrnetlab/cisco_c8000v:17.13.01a
+    cisco_xrd:
+      # adjust the tag to match the image you imported
+      image: ios-xr/xrd-control-plane:24.1.1
+    bridge: {}
+
+  nodes:
+    # ----- c8000v (IOS-XE) -------------------------------------------------
+    r1: { kind: cisco_c8000v }
+    r2: { kind: cisco_c8000v }
+    r3: { kind: cisco_c8000v }
+    r4: { kind: cisco_c8000v }
+    # ----- XRd (IOS-XR) ----------------------------------------------------
+    r5: { kind: cisco_xrd }
+    r6: { kind: cisco_xrd }
+    r7: { kind: cisco_xrd }
+    r8: { kind: cisco_xrd }
+    # ----- broadcast segments (host Linux bridges, must pre-exist) ---------
+    br-lan1: { kind: bridge }
+    br-lan2: { kind: bridge }
+
+  links:
+    # ===== Broadcast LAN-1  (r1 c8000v, r5 XRd, r6 XRd) ====================
+    # Mixed IOS-XE / IOS-XR segment -> great for DIS election study
+    - endpoints: ["r1:eth1", "br-lan1:e-r1"]
+    - endpoints: ["r5:eth1", "br-lan1:e-r5"]
+    - endpoints: ["r6:eth1", "br-lan1:e-r6"]
+
+    # ===== Broadcast LAN-2  (r3 c8000v, r4 c8000v, r8 XRd) ================
+    - endpoints: ["r3:eth2", "br-lan2:e-r3"]
+    - endpoints: ["r4:eth1", "br-lan2:e-r4"]
+    - endpoints: ["r8:eth1", "br-lan2:e-r8"]
+
+    # ===== Point-to-point links ==========================================
+    - endpoints: ["r1:eth2", "r2:eth1"]   # r1 <-> r2
+    - endpoints: ["r2:eth2", "r3:eth1"]   # r2 <-> r3
+    - endpoints: ["r2:eth3", "r7:eth1"]   # r2 <-> r7
+    - endpoints: ["r4:eth2", "r5:eth2"]   # r4 <-> r5
+    - endpoints: ["r5:eth3", "r7:eth2"]   # r5 <-> r7
+    - endpoints: ["r6:eth2", "r8:eth2"]   # r6 <-> r8
+    - endpoints: ["r7:eth3", "r8:eth3"]   # r7 <-> r8
+    - endpoints: ["r3:eth3", "r6:eth3"]   # r3 <-> r6
