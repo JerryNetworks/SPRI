@@ -5,7 +5,9 @@ of Cisco **Catalyst 8000V** (IOS-XE) and **XRd** (IOS-XR) nodes.
 
 - **8 routers** — `r1`–`r4` are c8000v, `r5`–`r8` are XRd
 - **Single Level-2 area**
-- **2 broadcast LAN segments** (one mixes IOS-XE + IOS-XR for DIS-election practice)
+- **2 broadcast LAN segments** (one mixes IOS-XE + IOS-XR for DIS-election practice),
+  each built from a small Linux switch node (`sw1`/`sw2`) that containerlab creates
+  and tears down automatically — **no host bridges to pre-create**
 - **8 point-to-point links** forming a redundant mesh for SPF / path-selection study
 
 > This repo intentionally ships **topology + cabling only** — no startup configs.
@@ -28,9 +30,13 @@ of Cisco **Catalyst 8000V** (IOS-XE) and **XRd** (IOS-XR) nodes.
       r7 --- r8
 
   Full link list:
-    LAN-1: r1, r5, r6        LAN-2: r3, r4, r8
+    LAN-1 (via sw1): r1, r5, r6     LAN-2 (via sw2): r3, r4, r8
     p2p:   r1-r2  r2-r3  r2-r7  r4-r5  r5-r7  r6-r8  r7-r8  r3-r6
 ```
+
+> `sw1` and `sw2` are `linux` kind nodes (image `ghcr.io/srl-labs/network-multitool`)
+> that bridge their own ports internally. They are pure L2 — invisible to IS-IS — so
+> the routers on each LAN form a normal multi-access adjacency and elect a DIS.
 
 ## Cabling / interface map
 
@@ -88,6 +94,8 @@ Suggested link subnets (all under `172.16.0.0/16`):
 - The two router images imported locally. On the lab server (`10.0.0.172`) these are:
   - `vrnetlab/cisco_c8000v:17.15.05` (also `17.12.05a` available)
   - `ios-xr/xrd-control-plane:26.1.1`
+- The switch image `ghcr.io/srl-labs/network-multitool:latest` (pulled automatically
+  on first deploy if the host has internet)
 - **Resources**: c8000v ≈ 4 GB RAM each, XRd ≈ 2 GB each → budget **~24 GB RAM**
   and 8+ vCPUs for the full lab. The lab server has 28 cores / 125 GB RAM, so the
   full topology runs comfortably there.
@@ -95,14 +103,11 @@ Suggested link subnets (all under `172.16.0.0/16`):
 ## Deploy
 
 ```bash
-# 1. Create the two host bridges for the broadcast segments
-sudo ip link add br-lan1 type bridge && sudo ip link set br-lan1 up
-sudo ip link add br-lan2 type bridge && sudo ip link set br-lan2 up
-
-# 2. Deploy (c8000v nodes take ~5 min to boot)
+# Deploy (c8000v nodes take ~5 min to boot). The sw1/sw2 LAN switches and their
+# bridges are created automatically — no host setup needed.
 sudo clab deploy -t isis-lab.clab.yml
 
-# 3. Inspect
+# Inspect
 sudo clab inspect -t isis-lab.clab.yml
 ```
 
@@ -119,7 +124,6 @@ Destroy:
 
 ```bash
 sudo clab destroy -t isis-lab.clab.yml --cleanup
-sudo ip link del br-lan1 ; sudo ip link del br-lan2
 ```
 
 ## Study ideas
