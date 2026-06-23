@@ -9,9 +9,10 @@
 # edge ports (forwarding immediately), giving a true multi-access segment for
 # DIS-election / pseudonode study.
 #
-# Interface mapping (link "ethN" -> device interface):
-#   c8000v (cisco_c8000v):  eth1=Gi2, eth2=Gi3, eth3=Gi4 ...  (Gi1 = mgmt)
-#   XRd    (cisco_xrd):     eth1=Gi0/0/0/0, eth2=Gi0/0/0/1, eth3=Gi0/0/0/2 ...
+# Interface naming used in the links below (clab requires native names per kind):
+#   c8000v (cisco_c8000v):  eth1=Gi2, eth2=Gi3, eth3=Gi4 ...   (Gi1 = mgmt)
+#   XRd    (cisco_xrd):     Gi0-0-0-0, Gi0-0-0-1, Gi0-0-0-2 ... (= Gi0/0/0/X)
+#   cEOS   (arista_ceos):   eth1, eth2, eth3 (= Ethernet1/2/3)
 #
 # Credentials:  c8000v -> admin/admin     XRd -> clab/clab@123
 # Deploy:  sudo clab deploy -t isis-lab.clab.yml   (see README.md)
@@ -57,20 +58,20 @@ topology:
     # ===== Broadcast LAN-1  (r1 c8000v, r5 XRd, r6 XRd) ====================
     # Mixed IOS-XE / IOS-XR segment -> great for DIS election study
     - endpoints: ["r1:eth1", "sw1:eth1"]
-    - endpoints: ["r5:eth1", "sw1:eth2"]
-    - endpoints: ["r6:eth1", "sw1:eth3"]
+    - endpoints: ["r5:Gi0-0-0-0", "sw1:eth2"]
+    - endpoints: ["r6:Gi0-0-0-0", "sw1:eth3"]
 
     # ===== Broadcast LAN-2  (r3 c8000v, r4 c8000v, r8 XRd) ================
     - endpoints: ["r3:eth2", "sw2:eth1"]
     - endpoints: ["r4:eth1", "sw2:eth2"]
-    - endpoints: ["r8:eth1", "sw2:eth3"]
+    - endpoints: ["r8:Gi0-0-0-0", "sw2:eth3"]
 
     # ===== Point-to-point links ==========================================
-    - endpoints: ["r1:eth2", "r2:eth1"]   # r1 <-> r2
-    - endpoints: ["r2:eth2", "r3:eth1"]   # r2 <-> r3
-    - endpoints: ["r2:eth3", "r7:eth1"]   # r2 <-> r7
-    - endpoints: ["r4:eth2", "r5:eth2"]   # r4 <-> r5
-    - endpoints: ["r5:eth3", "r7:eth2"]   # r5 <-> r7
-    - endpoints: ["r6:eth2", "r8:eth2"]   # r6 <-> r8
-    - endpoints: ["r7:eth3", "r8:eth3"]   # r7 <-> r8
-    - endpoints: ["r3:eth3", "r6:eth3"]   # r3 <-> r6
+    - endpoints: ["r1:eth2", "r2:eth1"]            # r1 <-> r2
+    - endpoints: ["r2:eth2", "r3:eth1"]            # r2 <-> r3
+    - endpoints: ["r2:eth3", "r7:Gi0-0-0-0"]       # r2 <-> r7
+    - endpoints: ["r4:eth2", "r5:Gi0-0-0-1"]       # r4 <-> r5
+    - endpoints: ["r5:Gi0-0-0-2", "r7:Gi0-0-0-1"]  # r5 <-> r7
+    - endpoints: ["r6:Gi0-0-0-1", "r8:Gi0-0-0-1"]  # r6 <-> r8
+    - endpoints: ["r7:Gi0-0-0-2", "r8:Gi0-0-0-2"]  # r7 <-> r8
+    - endpoints: ["r3:eth3", "r6:Gi0-0-0-2"]       # r3 <-> r6
