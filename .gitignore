@@ -11,6 +11,12 @@ ansible-inventory.yml
 topology-data.json
 authorized_keys
 
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
 # editor / OS noise
 .vscode/
 .idea/
