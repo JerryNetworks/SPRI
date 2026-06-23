@@ -3,10 +3,11 @@
 # Single Level-2 area.  Mix of point-to-point and broadcast (LAN) links.
 # =============================================================================
 #
-# Broadcast LANs are built with small Linux "switch" nodes (sw1, sw2) that
+# Broadcast LANs are built with Arista cEOS "switch" nodes (sw1, sw2) that
 # containerlab creates and destroys automatically — no host bridges to set up.
-# Each switch bridges its own ports internally, giving a true multi-access
-# segment for DIS-election / pseudonode study.
+# cEOS ports default to switchport access VLAN 1 (pure L2) and come up as STP
+# edge ports (forwarding immediately), giving a true multi-access segment for
+# DIS-election / pseudonode study.
 #
 # Interface mapping (link "ethN" -> device interface):
 #   c8000v (cisco_c8000v):  eth1=Gi2, eth2=Gi3, eth3=Gi4 ...  (Gi1 = mgmt)
@@ -30,9 +31,9 @@ topology:
     cisco_xrd:
       # installed on the lab server (10.0.0.172)
       image: ios-xr/xrd-control-plane:26.1.1
-    linux:
-      # used only for the broadcast-LAN switches
-      image: ghcr.io/srl-labs/network-multitool:latest
+    arista_ceos:
+      # used for the broadcast-LAN switches (pure L2, default VLAN 1)
+      image: ceos:4.35.2F
 
   nodes:
     # ----- c8000v (IOS-XE) -------------------------------------------------
@@ -47,29 +48,10 @@ topology:
     r8: { kind: cisco_xrd }
 
     # ----- broadcast-segment switches (auto-managed by containerlab) -------
-    # sw1 = LAN-1 (r1, r5, r6) ; sw2 = LAN-2 (r3, r4, r8)
-    sw1:
-      kind: linux
-      exec:
-        - ip link add name br0 type bridge
-        - ip link set br0 up
-        - ip link set eth1 master br0
-        - ip link set eth1 up
-        - ip link set eth2 master br0
-        - ip link set eth2 up
-        - ip link set eth3 master br0
-        - ip link set eth3 up
-    sw2:
-      kind: linux
-      exec:
-        - ip link add name br0 type bridge
-        - ip link set br0 up
-        - ip link set eth1 master br0
-        - ip link set eth1 up
-        - ip link set eth2 master br0
-        - ip link set eth2 up
-        - ip link set eth3 master br0
-        - ip link set eth3 up
+    # Arista cEOS as pure L2 switches. Default config (switchport access VLAN 1,
+    # STP edge) needs no startup-config for an IS-IS broadcast segment.
+    sw1: { kind: arista_ceos }   # LAN-1 switch (r1, r5, r6)
+    sw2: { kind: arista_ceos }   # LAN-2 switch (r3, r4, r8)
 
   links:
     # ===== Broadcast LAN-1  (r1 c8000v, r5 XRd, r6 XRd) ====================
